@@ -1,1 +1,4 @@
 /venv/
+.idea/
+multidbquery/__pycache__/
+multidbquery/queriers/__pycache__/
