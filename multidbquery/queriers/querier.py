@@ -6,20 +6,39 @@ for each query in the following format:
 {
     'database_name_1': [
         {
-            'column__A': ['value1', 'value2', '...'],
-            'column_B': ['value1', 'value2', '...'],
-            '...': ['...']
+            'column_A': 'value A row 1',
+            'column_B': 'value B row 1',
+            '...': '...'
+        },
+        {
+            'column_A': 'value A row 2',
+            'column_B': 'value B row 2',
+            '...': '...'
+        },
+        {
+            '...': '...'
         }
     ],
     'database_name_2': [
         {
-            'column__A': ['value1', 'value2', '...'],
-            'column_B': ['value1', 'value2', '...'],
-            '...': ['...']
+            'column_A': 'value A row 1',
+            'column_B': 'value B row 1',
+            '...': '...'
+        },
+        {
+            'column_A': 'value A row 2',
+            'column_B': 'value B row 2',
+            '...': '...'
+        },
+        {
+            '...': '...'
         }
     ]
 }
 """
+
+
+
 import sqlparse as _sqlparse
 from typing import Dict, List, Union
 from abc import ABC, abstractmethod
