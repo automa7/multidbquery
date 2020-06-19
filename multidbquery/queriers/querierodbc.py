@@ -12,12 +12,26 @@ from multidbquery.queriers.querier import QuerierBasic
 
 class QuerierODBC(QuerierBasic):
 
-    def __init__(self, driver: str, server: str, user: str, password: str, port: int = 1433):
+    def __init__(self, driver: str = None, server: str = None, user: str = None, password: str = None, port: int = 1433,
+                 connstring=None):
+        """
+
+        :param driver: ODBC driver to be used.
+        :param server: server address to connect.
+        :param user: username
+        :param password: password
+        :param port: port to connect to service
+        :param connstring: optional connstring for use instead of arguments.
+        """
+        if (driver is None or server is None or user is None or password is None) and connstring is None:
+            raise ValueError("Missing values for connstring creation.")
+
         self._driver = driver
         self._server = server
         self._port = port
         self._username = user
         self._password = password
+        self._connstring = connstring
 
     def _get_cursor(self, database: str) -> _pyodbc.Cursor:
         """
@@ -28,8 +42,11 @@ class QuerierODBC(QuerierBasic):
         """
         if self.TEST_MODE:
             return None
-        connstring = f'DRIVER={self._driver};SERVER={self._server};DATABASE={database};' \
-                     f'PORT={self._port};UID={self._username};PWD={self._password}'
+        if self._connstring is None:
+            connstring = f'DRIVER={self._driver};SERVER={self._server};DATABASE={database};' \
+                         f'PORT={self._port};UID={self._username};PWD={self._password}'
+        else:
+            connstring = self._connstring
 
         conn = _pyodbc.connect(connstring)
 

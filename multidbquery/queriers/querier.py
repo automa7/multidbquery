@@ -36,9 +36,6 @@ for each query in the following format:
     ]
 }
 """
-
-
-
 import sqlparse as _sqlparse
 from typing import Dict, List, Union
 from abc import ABC, abstractmethod
@@ -50,6 +47,52 @@ class QuerierBasic(ABC):
     BAD = bad_commands
     TEST_MODE = False
 
+    @staticmethod
+    def _remove_space_comments(query):
+        """
+        Iterates through query characters to strip comments.
+
+        :param query: string containing query.
+        :return: one-liner string containing query.
+        """
+        query_no_comment = list()
+        find_end_comment = False
+
+        for line in query.split('\n'):
+            def check_double_hiphen(line_to_check):
+                if '--' in line_to_check:
+                    line_to_check = line_to_check[:line_to_check.index('--')]
+                return line_to_check
+
+            def add_line(line_to_add):
+                line_to_add = check_double_hiphen(line_to_add)
+                query_no_comment.append(line_to_add)
+
+            # breaks for easier treatment of comments
+            line = line.split(' ')
+
+            if '/*' in line:
+                if '*/' in line:
+                    line = line[:line.index('/*')] + line[line.index('*/')+2:]
+                else:
+                    line = line[:line.index('/*')]
+                add_line(line)
+                find_end_comment = True
+                continue
+
+            if find_end_comment:
+                if '*/' not in line:
+                    continue
+                else:
+                    line = line[line.index('*/')+2:]
+                    add_line(line)
+                    find_end_comment = False
+
+            add_line(line)
+
+        query_trimmed = ' '.join(query_no_comment)
+        return query_trimmed
+
     def _parse(self, query: str):
         """
         Parses query tokens and cause SyntaxError for tokens that match bad commands.
@@ -58,17 +101,18 @@ class QuerierBasic(ABC):
         :param query: string containing the query that will be parsed
         :return:
         """
-        query = _sqlparse.parse(query)[0].tokens
-        for tk in query:
+        stripped_query = self._remove_space_comments(query)
+        tokens = _sqlparse.parse(stripped_query)[0].tokens
+        for tk in tokens:
             if tk.value.upper() in self.BAD:
                 raise SyntaxError(f'bad command found: {tk.value.upper()}')
 
     @abstractmethod
     def _single_query(self, query: str, database: str) -> List[Dict[str, List]]:
         """
-        protected method for single thread query execution.
+        Protected method for single thread query execution.
 
-        :param query: string containing the query that will be executed
+        :param query: string containing the query that will be executed.
         :param database: string containing the database name.
         :return: List of dictionaries that contain the column as key and the row value
         """
@@ -77,7 +121,7 @@ class QuerierBasic(ABC):
     @abstractmethod
     def _multi_query(self, query: str, database: List[str]) -> Dict[str, List[Dict]]:
         """
-        protected method for multi thread query execution.
+        Protected method for multi thread query execution.
 
         :param query: string containing the query that will be executed.
         :param database: string or list of strings containing the database names.
@@ -88,7 +132,7 @@ class QuerierBasic(ABC):
     @abstractmethod
     def query(self, query: str, database: Union[List[str], str], multithreading: bool = True) -> Dict[str, List[Dict]]:
         """
-        public method for query execution.
+        Public method for query execution.
 
         :param query: string containing the query that will be executed.
         :param database: string or list of strings containing the database names.
